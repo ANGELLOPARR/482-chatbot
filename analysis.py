@@ -50,6 +50,15 @@ class TextAnalysis:
 
         return self._sents
 
+    def get_pos(self):
+        if self._sent_tokens is None:
+            pos = []
+            for sent in self.get_tokens():
+                pos.append(nltk.pos_tag(sent))
+            self._pos = pos
+
+        return self._pos
+
     def get_num_tokens(self):
         if self._num_tokens is None:
             num_tokens = 0
