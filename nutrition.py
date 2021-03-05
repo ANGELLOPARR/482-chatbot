@@ -93,20 +93,23 @@ class Nutrition:
         keys = list(serving.keys())
         keys = [k for k in keys if k not in self.ignore]
         field = field.replace(' ', '_')
-        print(field)
+
         most_similar, min_dist = None, None
         for k in keys:
             distance = nltk.edit_distance(field, k)
             if most_similar is None or distance < min_dist:
                 most_similar, min_dist = k, distance
 
+        res = ""
+        if min_dist >= 4:
+            res += "The field you want information on may not be in my database for this food...\n"
         desired_val = serving[most_similar]
         unit = self.units[most_similar] if most_similar in self.units else metric
         most_similar = most_similar.replace('_', ' ')
         most_similar = most_similar.split()
         most_similar = map(lambda x: x.upper() if len(x) == 1 else x, most_similar)
         most_similar = ' '.join(most_similar)
-        res = f'In {serving_desc} {name} there is {desired_val}{unit} of {most_similar}'
+        res += f'In {serving_desc} {name} there is {desired_val}{unit} of {most_similar}'
         return res
 
 if __name__ == '__main__':

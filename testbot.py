@@ -247,11 +247,24 @@ class TestBot(irc.bot.SingleServerIRCBot):
         if re.match(r'^how much|^how many|^tell me about', cmd):
             tokens = TextAnalysis(cmd).get_pos()[0]
             print(tokens)
-            objects = [word for word, pos in tokens if pos == 'NN' or pos == 'NNS' or pos == 'NNP']
-            if len(objects) == 1:
-                response = self.nutrition.get_nutrition_general(objects[0])
+
+            objects = [word for word, pos in tokens if (pos == 'NN' or pos == 'NNS' or pos == 'NNP' or pos == 'JJ')\
+                and (word !='much' and word != 'many')]
+            print(objects)
+            final_objects = []
+            if re.match(r'tell', cmd):
+                final_objects.append(' '.join(objects))
             else:
-                response = self.nutrition.get_nutrition_specific(objects[0], objects[1])
+                final_objects.append(objects[0])
+                objects.pop(0)
+                final_objects.append(' '.join(objects))
+
+            # print(final_objects)
+
+            if len(final_objects) == 1:
+                response = self.nutrition.get_nutrition_general(final_objects[0])
+            else:
+                response = self.nutrition.get_nutrition_specific(final_objects[0], final_objects[1])
             self.msg_user(response)
             self.reset_state()
             return
