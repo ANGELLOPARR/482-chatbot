@@ -34,39 +34,61 @@ class Nutrition:
             'calcium' : 'mg',
             'iron' : 'mg'
         }
+        self.essential = {
+            'calories',
+            'carbohydrate',
+            'protein',
+            'fat',
+            'fiber',
+            'sugar'
+        }
 
     def get_nutrition_general(self, food):
         food_id = self.fs.foods_search(food)[0]['food_id']
         detailed = self.fs.food_get(food_id)
-        name = detailed['food_name']
+        name = detailed['food_name'].lower()
         url = detailed['food_url']
-        serving = detailed['servings']['serving'][0]
+        # print(type(detailed['servings']['serving']))
+        if isinstance(detailed['servings']['serving'], dict):
+            serving = detailed['servings']['serving']
+        else:
+            serving = detailed['servings']['serving'][0]
+        # print(serving)
         serving_desc = serving['serving_description']
-        metric = serving['metric_serving_unit']
+        metric = 'g'
         res = f'In {serving_desc} {name} there are:\n'
 
+        info = []
         for key, val in serving.items():
-            if key not in self.ignore:
+            if key in self.essential:
                 unit = self.units[key] if key in self.units else metric
                 key2 = 'total ' + key if key == 'carbohydrate' or key == 'fat' else key
                 key2 = key2.replace('_', ' ')
                 key2 = key2.split()
                 key2 = map(lambda x: x.upper() if len(x) == 1 else x, key2)
                 key2 = ' '.join(key2)
-                res += f'{val}{unit} of {key2}\n'
+                info.append(f'{val}{unit} of {key2}')
 
+        info[-1] = 'and ' + info[-1]
+        info = ', '.join(info)
+        res += info + '\n'
         res += f'More information can be found at {url}'
+
         return res
 
     def get_nutrition_specific(self, field, food):
         field = field.lower()
         food_id = self.fs.foods_search(food)[0]['food_id']
         detailed = self.fs.food_get(food_id)
-        name = detailed['food_name']
+        name = detailed['food_name'].lower()
         url = detailed['food_url']
-        serving = detailed['servings']['serving'][0]
+        if isinstance(detailed['servings']['serving'], dict):
+            serving = detailed['servings']['serving']
+        else:
+            serving = detailed['servings']['serving'][0]
         serving_desc = serving['serving_description']
-        metric = serving['metric_serving_unit']
+        serving_desc = serving_desc.replace(name, '')
+        metric = 'g'
 
         keys = list(serving.keys())
         keys = [k for k in keys if k not in self.ignore]
