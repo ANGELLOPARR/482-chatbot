@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
-from nltk.corpus import sentiwordnet as swn
 import nltk
+from nltk.corpus import sentiwordnet as swn
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 
