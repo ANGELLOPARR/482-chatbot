@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
-from nltk.corpus import sentiwordnet as swn
 import nltk
+from nltk.corpus import sentiwordnet as swn
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 
@@ -49,6 +49,15 @@ class TextAnalysis:
             self._sents = nltk.sent_tokenize(self._txt)
 
         return self._sents
+
+    def get_pos(self):
+        if self._sent_tokens is None:
+            pos = []
+            for sent in self.get_tokens():
+                pos.append(nltk.pos_tag(sent))
+            self._pos = pos
+
+        return self._pos
 
     def get_num_tokens(self):
         if self._num_tokens is None:

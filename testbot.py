@@ -3,12 +3,14 @@
 # Example program using irc.bot.
 #
 # Joel Rosdahl <joel@rosdahl.net>
-from typing import Optional
+from typing import Optional, Text
 import time
 import random
 import analysis
 from analysis import TextAnalysis
 from threading import Timer, Thread
+from fatsecret import Fatsecret
+from nutrition import Nutrition
 
 """A simple example bot.
 This is an example bot that uses the SingleServerIRCBot class from
@@ -148,6 +150,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         self.total_objectivity = 0
         self.state = State.START
         self.converser = None
+        self.nutrition = Nutrition()
 
     def on_join(self, connection, events):
         c = self.connection
@@ -218,8 +221,10 @@ class TestBot(irc.bot.SingleServerIRCBot):
                 if user != c.get_nickname()
             ]
             self.converser = users[random.randint(0, len(users) - 1)]
-        
-        c.privmsg(channel, self.converser + ': ' + msg)
+
+        msg = msg.split('\n')
+        for line in msg:
+            c.privmsg(channel, self.converser + ': ' + line)
 
     def do_command(self, e, cmd: str):
 
@@ -234,9 +239,35 @@ class TestBot(irc.bot.SingleServerIRCBot):
             self.converser = nick
 
         cmd = cmd.strip()
+        cmd = cmd.lower()
 
         if self.timer is not None:
             self.timer.cancel()
+
+        if re.match(r'^how much|^how many|^tell me about', cmd):
+            tokens = TextAnalysis(cmd).get_pos()[0]
+            print(tokens)
+
+            objects = [word for word, pos in tokens if (pos == 'NN' or pos == 'NNS' or pos == 'NNP' or pos == 'JJ')\
+                and (word !='much' and word != 'many')]
+            print(objects)
+            final_objects = []
+            if re.match(r'tell', cmd):
+                final_objects.append(' '.join(objects))
+            else:
+                final_objects.append(objects[0])
+                objects.pop(0)
+                final_objects.append(' '.join(objects))
+
+            # print(final_objects)
+
+            if len(final_objects) == 1:
+                response = self.nutrition.get_nutrition_general(final_objects[0])
+            else:
+                response = self.nutrition.get_nutrition_specific(final_objects[0], final_objects[1])
+            self.msg_user(response)
+            self.reset_state()
+            return
 
         time.sleep(random.randint(1, 3))
 
@@ -331,6 +362,12 @@ def main():
         port = 6667
     channel = sys.argv[2]
     nickname = sys.argv[3]
+
+    with open('keys.txt', 'r') as f:
+        keys = f.read().splitlines()
+
+    consumer_key = keys[0]
+    consumer_secret = keys[1]
 
     bot = TestBot(channel, nickname, server, port)
     bot.start()
